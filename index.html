@@ -6,6 +6,9 @@
     <title>After School Club</title>
     <!-- Vue 3 CDN Script -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Font Awesome CSS CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,6 +18,13 @@
 
         h1 {
             color: #333;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
         /* Lesson Card Container */
@@ -45,24 +55,57 @@
             margin: 5px 0;
             color: #555;
         }
+
+        /* Buttons */
+        button {
+            padding: 8px 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
 
     <div id="app">
-        <h1>After School Club</h1>
+        <header>
+            <h1>After School Club</h1>
+            
+            <!-- Checkout Button (Task 5) -->
+            <button v-on:click="toggleCart" v-bind:disabled="numberOfItems === 0">
+                <i class="fa fa-shopping-cart"></i> Checkout ({{ numberOfItems }})
+            </button>
+        </header>
 
-        <div class="lesson-card">
-            
-            <img v-bind:src="lesson.image" v-bind:alt="lesson.altText">
-            
-            <h2 class="lesson-title">{{ lesson.subject }}</h2>
-            <p class="lesson-info">Location: {{ lesson.location }}</p>
-            <p class="lesson-info">Price: {{ lesson.price }}</p>
-        </div>
+        <main>
+            <!-- Main Lesson View (Task 4) -->
+            <div v-if="!displayCart" class="lesson-card">
+                <img v-bind:src="lesson.image" v-bind:alt="lesson.altText">
+                
+                <h2 class="lesson-title">{{ lesson.subject }}</h2>
+                <p class="lesson-info">Location: {{ lesson.location }}</p>
+                <p class="lesson-info">Price: £{{ lesson.price }}</p>
+                <p class="lesson-info">Spaces: {{ lesson.availability }}</p>
+
+                <!-- Add to Cart Button (Task 4) -->
+                <button v-on:click="addToCart" v-bind:disabled="!canAddToCart">
+                    Add to Cart
+                </button>
+            </div>
+
+            <!-- Checkout Placeholder View (Task 5) -->
+            <div v-else>
+                <h2>Checkout Page</h2>
+                <p>Welcome to checkout! You have {{ numberOfItems }} item(s) in your cart.</p>
+            </div>
+        </main>
     </div>
 
-    
     <script type="module">
         const { createApp } = Vue;
 
@@ -70,12 +113,35 @@
             data() {
                 return {
                     lesson: {
+                        id: 1001,
                         subject: "Computer Science",                  
                         location: "London",                 
-                        price: 100,                          
+                        price: 100,
+                        availability: 5,                            
                         image: "images/Computer Science.jpg",            
                         altText: "Icon showing computer symbols" 
+                    },
+                    cart: [],
+                    displayCart: false
+                }
+            },
+            computed: {
+                canAddToCart() {
+                    return this.lesson.availability > 0;
+                },
+                numberOfItems() {
+                    return this.cart.length;
+                }
+            },
+            methods: {
+                addToCart() {
+                    if (this.canAddToCart) {
+                        this.cart.push(this.lesson.id);
+                        this.lesson.availability -= 1;
                     }
+                },
+                toggleCart() {
+                    this.displayCart = !this.displayCart;
                 }
             }
         }).mount('#app');
