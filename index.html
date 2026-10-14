@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>After School Club</title>
+    <!-- Vue 3 CDN Script -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        /* Lesson Card Container */
+        .lesson-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            width: 250px;
+            background-color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Image sizing */
+        .lesson-card img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .lesson-title {
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+        }
+
+        .lesson-info {
+            margin: 5px 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <h1>After School Club</h1>
+
+        <div class="lesson-card">
+            
+            <img v-bind:src="lesson.image" v-bind:alt="lesson.altText">
+            
+            <h2 class="lesson-title">{{ lesson.subject }}</h2>
+            <p class="lesson-info">Location: {{ lesson.location }}</p>
+            <p class="lesson-info">Price: {{ lesson.price }}</p>
+        </div>
+    </div>
+
+    
+    <script type="module">
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    lesson: {
+                        subject: "Computer Science",                  
+                        location: "London",                 
+                        price: 100,                          
+                        image: "images/Computer Science.jpg",            
+                        altText: "Icon showing computer symbols" 
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+
+</body>
+</html>
