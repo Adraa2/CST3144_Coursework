@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>After School Club</title>
-    <!-- Vue 3 CDN Script -->
+    
+    <!-- Vue 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <!-- Font Awesome CSS CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -25,6 +26,13 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+        }
+
+        /* Container for multiple lesson cards */
+        .lessons-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
         }
 
         /* Lesson Card Container */
@@ -56,6 +64,24 @@
             color: #555;
         }
 
+        /* Cart and Form Styling */
+        .cart-item {
+            border-bottom: 1px solid #ccc;
+            padding: 10px 0;
+        }
+
+        .checkout-form {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            width: 300px;
+        }
+
+        .checkout-form div {
+            margin-bottom: 10px;
+        }
+
         /* Buttons */
         button {
             padding: 8px 12px;
@@ -76,72 +102,145 @@
         <header>
             <h1>After School Club</h1>
             
-            <!-- Checkout Button (Task 5) -->
             <button v-on:click="toggleCart" v-bind:disabled="numberOfItems === 0">
                 <i class="fa fa-shopping-cart"></i> Checkout ({{ numberOfItems }})
             </button>
         </header>
 
         <main>
-            <!-- Main Lesson View (Task 4) -->
-            <div v-if="!displayCart" class="lesson-card">
-                <img v-bind:src="lesson.image" v-bind:alt="lesson.altText">
-                
-                <h2 class="lesson-title">{{ lesson.subject }}</h2>
-                <p class="lesson-info">Location: {{ lesson.location }}</p>
-                <p class="lesson-info">Price: £{{ lesson.price }}</p>
-                <p class="lesson-info">Spaces: {{ lesson.availability }}</p>
+            <!-- Lesson View Grid -->
+            <div v-if="!displayCart" class="lessons-grid">
+                <div v-for="lesson in lessons" :key="lesson.id" class="lesson-card">
+                    <img v-bind:src="lesson.image" v-bind:alt="lesson.altText">
+                    
+                    <h2 class="lesson-title">{{ lesson.subject }}</h2>
+                    <p class="lesson-info">Location: {{ lesson.location }}</p>
+                    <p class="lesson-info">Price: £{{ lesson.price }}</p>
+                    <p class="lesson-info">Spaces: {{ lesson.spaces - cartCount(lesson.id) }}</p>
 
-                <!-- Add to Cart Button (Task 4) -->
-                <button v-on:click="addToCart" v-bind:disabled="!canAddToCart">
-                    Add to Cart
-                </button>
+                    <button v-on:click="addToCart(lesson)" v-bind:disabled="!canAddToCart(lesson)">
+                        Add to Cart
+                    </button>
+                </div>
             </div>
 
-            <!-- Checkout Placeholder View (Task 5) -->
+            <!-- Checkout / Cart View -->
             <div v-else>
-                <h2>Checkout Page</h2>
-                <p>Welcome to checkout! You have {{ numberOfItems }} item(s) in your cart.</p>
+                <h2>Shopping Cart Page</h2>
+                
+                <div v-if="cart.length === 0">
+                    <p>Your cart is empty.</p>
+                </div>
+
+                <div v-else>
+                    <h3>Items in Cart:</h3>
+                    <div v-for="lesson in lessons" :key="lesson.id">
+                        <div v-if="cartCount(lesson.id) > 0" class="cart-item">
+                            <p><strong>{{ lesson.subject }}</strong> - Quantity: {{ cartCount(lesson.id) }}</p>
+                            <p>Price per item: £{{ lesson.price }}</p>
+                            <button v-on:click="removeFromCart(lesson.id)">Remove One</button>
+                        </div>
+                    </div>
+
+                    <div class="checkout-form">
+                        <h3>Customer Information</h3>
+                        <div>
+                            <label>Name: </label>
+                            <input v-model="order.name" type="text" placeholder="Enter full name">
+                        </div>
+                        <div>
+                            <label>Phone: </label>
+                            <input v-model="order.phone" type="text" placeholder="Enter phone number">
+                        </div>
+
+                        <button v-bind:disabled="!isOrderValid" v-on:click="submitForm">
+                            Submit Order
+                        </button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 
-    <script type="module">
-        const { createApp } = Vue;
-
-        createApp({
+    <script>
+        Vue.createApp({
             data() {
                 return {
-                    lesson: {
-                        id: 1001,
-                        subject: "Computer Science",                  
-                        location: "London",                 
-                        price: 100,
-                        availability: 5,                            
-                        image: "images/Computer Science.jpg",            
-                        altText: "Icon showing computer symbols" 
-                    },
+                    lessons: [
+                        {
+                            id: 1001,
+                            subject: "Computer Science",
+                            location: "London",
+                            price: 100,
+                            spaces: 5,
+                            image: "images/Computer Science.jpg",
+                            altText: "Icon showing computer symbols"
+                        },
+                        {
+                            id: 1002,
+                            subject: "Maths",
+                            location: "Oxford",
+                            price: 80,
+                            spaces: 5,
+                            image: "images/math.jpg",
+                            altText: "Icon showing math symbols"
+                        },
+                        {
+                            id: 1003,
+                            subject: "English",
+                            location: "Cambridge",
+                            price: 90,
+                            spaces: 5,
+                            image: "images/english.jpg",
+                            altText: "Icon showing english symbols"
+                        }
+                    ],
                     cart: [],
-                    displayCart: false
+                    displayCart: false,
+                    order: {
+                        name: '',
+                        phone: ''
+                    }
                 }
             },
             computed: {
-                canAddToCart() {
-                    return this.lesson.availability > 0;
-                },
                 numberOfItems() {
                     return this.cart.length;
+                },
+                isOrderValid() {
+                    return this.order.name.trim() !== '' && this.order.phone.trim() !== '';
                 }
             },
             methods: {
-                addToCart() {
-                    if (this.canAddToCart) {
-                        this.cart.push(this.lesson.id);
-                        this.lesson.availability -= 1;
+                addToCart(lesson) {
+                    if (this.canAddToCart(lesson)) {
+                        this.cart.push(lesson.id);
+                    }
+                },
+                canAddToCart(lesson) {
+                    return lesson.spaces > this.cartCount(lesson.id);
+                },
+                cartCount(id) {
+                    return this.cart.filter(itemId => itemId === id).length;
+                },
+                removeFromCart(lessonId) {
+                    const index = this.cart.indexOf(lessonId);
+                    if (index > -1) {
+                        this.cart.splice(index, 1);
+                    }
+                    if (this.cart.length === 0) {
+                        this.displayCart = false;
                     }
                 },
                 toggleCart() {
                     this.displayCart = !this.displayCart;
+                },
+                submitForm() {
+                    alert('Order submitted successfully!');
+                    this.cart = [];
+                    this.order.name = '';
+                    this.order.phone = '';
+                    this.displayCart = false;
                 }
             }
         }).mount('#app');
