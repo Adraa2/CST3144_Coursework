@@ -3,96 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>After School Club</title>
-    
+    <title>Lesson Web App</title>
     <!-- Vue 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- Font Awesome CSS CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 30px;
+            margin: 20px;
             background-color: #f4f4f9;
         }
-
-        h1 {
-            color: #333;
-        }
-
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-        }
-
-        /* Container for multiple lesson cards */
-        .lessons-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        /* Lesson Card Container */
-        .lesson-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            width: 250px;
-            background-color: #fff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Image sizing */
-        .lesson-card img {
-            width: 100px;
-            height: 100px;
-            object-fit: contain;
-            display: block;
-            margin-bottom: 15px;
-        }
-
-        .lesson-title {
-            margin: 0 0 10px 0;
-            font-size: 1.5rem;
-        }
-
-        .lesson-info {
-            margin: 5px 0;
-            color: #555;
-        }
-
-        /* Cart and Form Styling */
-        .cart-item {
-            border-bottom: 1px solid #ccc;
-            padding: 10px 0;
-        }
-
-        .checkout-form {
-            margin-top: 20px;
-            padding: 15px;
+            padding: 10px 20px;
             background: #fff;
             border-radius: 8px;
-            width: 300px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
-
-        .checkout-form div {
-            margin-bottom: 10px;
+        .controls {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-
-        /* Buttons */
+        .controls label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .controls select, .controls input {
+            margin-right: 15px;
+            padding: 5px;
+        }
+        .lesson-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .card img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
         button {
             padding: 8px 12px;
-            font-size: 1rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
-            margin-top: 10px;
         }
-
         button:disabled {
+            background-color: #ccc;
             cursor: not-allowed;
-            opacity: 0.5;
+        }
+        .cart-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -100,141 +81,142 @@
 
     <div id="app">
         <header>
-            <h1>After School Club</h1>
-            
-            <button v-on:click="toggleCart" v-bind:disabled="numberOfItems === 0">
-                <i class="fa fa-shopping-cart"></i> Checkout ({{ numberOfItems }})
+            <h1>Lesson Store</h1>
+            <!-- Cart Toggle Button -->
+            <button @click="toggleCart" :disabled="cart.length === 0">
+                <i class="fa-solid fa-cart-shopping"></i> Cart ({{ cart.length }})
             </button>
         </header>
 
-        <main>
-            <!-- Lesson View Grid -->
-            <div v-if="!displayCart" class="lessons-grid">
-                <div v-for="lesson in lessons" :key="lesson.id" class="lesson-card">
-                    <img v-bind:src="lesson.image" v-bind:alt="lesson.altText">
-                    
-                    <h2 class="lesson-title">{{ lesson.subject }}</h2>
-                    <p class="lesson-info">Location: {{ lesson.location }}</p>
-                    <p class="lesson-info">Price: £{{ lesson.price }}</p>
-                    <p class="lesson-info">Spaces: {{ lesson.spaces - cartCount(lesson.id) }}</p>
+        <!-- Lessons Page View -->
+        <div v-if="displayCart === false">
+            
+            <!-- Task 4.6 Sort Controls -->
+            <div class="controls">
+                <label for="sortAttribute">Sort By:</label>
+                <select id="sortAttribute" v-model="sortAttribute">
+                    <option value="subject">Subject</option>
+                    <option value="location">Location</option>
+                    <option value="price">Price</option>
+                    <option value="spaces">Spaces</option>
+                </select>
 
-                    <button v-on:click="addToCart(lesson)" v-bind:disabled="!canAddToCart(lesson)">
+                <label>Order:</label>
+                <input type="radio" id="asc" value="asc" v-model="sortOrder">
+                <label for="asc">Ascending</label>
+                <input type="radio" id="desc" value="desc" v-model="sortOrder">
+                <label for="desc">Descending</label>
+            </div>
+
+            <!-- Lessons Display -->
+            <div class="lesson-grid">
+                <div v-for="lesson in sortedLessons" :key="lesson.id" class="card">
+                    <img :src="lesson.image" :alt="lesson.subject">
+                    <h3>{{ lesson.subject }}</h3>
+                    <p>Location: {{ lesson.location }}</p>
+                    <p>Price: £{{ lesson.price }}</p>
+                    <p>Spaces: {{ lesson.spaces }}</p>
+                    
+                    <button @click="addToCart(lesson)" :disabled="lesson.spaces === 0">
                         Add to Cart
                     </button>
                 </div>
             </div>
 
-            <!-- Checkout / Cart View -->
-            <div v-else>
-                <h2>Shopping Cart Page</h2>
-                
-                <div v-if="cart.length === 0">
-                    <p>Your cart is empty.</p>
-                </div>
+        </div>
 
-                <div v-else>
-                    <h3>Items in Cart:</h3>
-                    <div v-for="lesson in lessons" :key="lesson.id">
-                        <div v-if="cartCount(lesson.id) > 0" class="cart-item">
-                            <p><strong>{{ lesson.subject }}</strong> - Quantity: {{ cartCount(lesson.id) }}</p>
-                            <p>Price per item: £{{ lesson.price }}</p>
-                            <button v-on:click="removeFromCart(lesson.id)">Remove One</button>
-                        </div>
-                    </div>
+        <!-- Cart & Checkout View -->
+        <div v-else class="cart-section">
+            <h2>Shopping Cart</h2>
+            <div v-if="cart.length > 0">
+                <ul>
+                    <li v-for="(item, index) in cart" :key="index">
+                        {{ item.subject }} - £{{ item.price }}
+                        <button @click="removeFromCart(item, index)">Remove</button>
+                    </li>
+                </ul>
 
-                    <div class="checkout-form">
-                        <h3>Customer Information</h3>
-                        <div>
-                            <label>Name: </label>
-                            <input v-model="order.name" type="text" placeholder="Enter full name">
-                        </div>
-                        <div>
-                            <label>Phone: </label>
-                            <input v-model="order.phone" type="text" placeholder="Enter phone number">
-                        </div>
-
-                        <button v-bind:disabled="!isOrderValid" v-on:click="submitForm">
-                            Submit Order
-                        </button>
-                    </div>
-                </div>
+                <h3>Checkout</h3>
+                <form @submit.prevent="submitForm">
+                    <p>
+                        <label>Name:</label>
+                        <input type="text" v-model="order.name" required>
+                    </p>
+                    <p>
+                        <label>Phone:</label>
+                        <input type="text" v-model="order.phone" required>
+                    </p>
+                    <button type="submit" :disabled="!order.name || !order.phone">Checkout</button>
+                </form>
             </div>
-        </main>
+            <div v-else>
+                <p>Your cart is empty.</p>
+            </div>
+        </div>
     </div>
 
     <script>
-        Vue.createApp({
+        const { createApp } = Vue;
+
+        createApp({
             data() {
                 return {
-                    lessons: [
-                        {
-                            id: 1001,
-                            subject: "Computer Science",
-                            location: "London",
-                            price: 100,
-                            spaces: 5,
-                            image: "images/Computer Science.jpg",
-                            altText: "Icon showing computer symbols"
-                        },
-                        {
-                            id: 1002,
-                            subject: "Maths",
-                            location: "Oxford",
-                            price: 80,
-                            spaces: 5,
-                            image: "images/math.jpg",
-                            altText: "Icon showing math symbols"
-                        },
-                        {
-                            id: 1003,
-                            subject: "English",
-                            location: "Cambridge",
-                            price: 90,
-                            spaces: 5,
-                            image: "images/english.jpg",
-                            altText: "Icon showing english symbols"
-                        }
-                    ],
+                    // Task 4.5: Lessons initialized as empty array to be fetched from backend
+                    lessons: [],
                     cart: [],
                     displayCart: false,
+                    
+                    // Task 4.6: Sorting properties
+                    sortAttribute: 'price',
+                    sortOrder: 'asc',
+
+                    // Checkout data
                     order: {
                         name: '',
                         phone: ''
                     }
                 }
             },
-            computed: {
-                numberOfItems() {
-                    return this.cart.length;
-                },
-                isOrderValid() {
-                    return this.order.name.trim() !== '' && this.order.phone.trim() !== '';
-                }
+            
+            // Task 4.5: Fetch data when Vue instance is created
+            created() {
+                this.fetchData();
             },
+
             methods: {
+                // Task 4.5: Fetch lesson data from Express server
+                async fetchData() {
+                    try {
+                        var response = await fetch("http://localhost:3000/");
+                        this.lessons = await response.json();
+                    } catch (error) {
+                        console.log("Error fetching lessons: " + error);
+                    }
+                },
+
+                // Add lesson to cart
                 addToCart(lesson) {
-                    if (this.canAddToCart(lesson)) {
-                        this.cart.push(lesson.id);
+                    if (lesson.spaces > 0) {
+                        lesson.spaces--;
+                        this.cart.push(lesson);
                     }
                 },
-                canAddToCart(lesson) {
-                    return lesson.spaces > this.cartCount(lesson.id);
-                },
-                cartCount(id) {
-                    return this.cart.filter(itemId => itemId === id).length;
-                },
-                removeFromCart(lessonId) {
-                    const index = this.cart.indexOf(lessonId);
-                    if (index > -1) {
-                        this.cart.splice(index, 1);
-                    }
+
+                // Remove lesson from cart and return space back
+                removeFromCart(item, index) {
+                    this.cart.splice(index, 1);
+                    item.spaces++;
                     if (this.cart.length === 0) {
                         this.displayCart = false;
                     }
                 },
+
+                // Toggle between cart and lesson list
                 toggleCart() {
                     this.displayCart = !this.displayCart;
                 },
+
+                // Submit order form
                 submitForm() {
                     alert('Order submitted successfully!');
                     this.cart = [];
@@ -242,9 +224,35 @@
                     this.order.phone = '';
                     this.displayCart = false;
                 }
+            },
+
+            computed: {
+                // Task 4.6: Sorting functionality
+                sortedLessons() {
+                    var lessonsArray = this.lessons.slice();
+                    var attribute = this.sortAttribute;
+                    var order = this.sortOrder;
+
+                    return lessonsArray.sort(function(a, b) {
+                        var aValue = a[attribute];
+                        var bValue = b[attribute];
+
+                        if (typeof aValue === 'string') {
+                            aValue = aValue.toLowerCase();
+                            bValue = bValue.toLowerCase();
+                        }
+
+                        if (aValue < bValue) {
+                            return order === 'asc' ? -1 : 1;
+                        }
+                        if (aValue > bValue) {
+                            return order === 'asc' ? 1 : -1;
+                        }
+                        return 0;
+                    });
+                }
             }
         }).mount('#app');
     </script>
-
 </body>
 </html>
