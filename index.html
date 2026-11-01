@@ -29,7 +29,7 @@
         </header>
         <!-- Main application container bound to Vue instance -->
         <main>
-            <!-- SHOP VIEW -->
+            <!-- SHOP VIEW: Displays available lessons with images, details, and Add to Cart button -->
             <div v-if="!displayCart">
                 <h2>Available Lessons</h2>
                 <div v-for="lesson in sortedLessons" :key="lesson._id" class="lesson-card">
