@@ -31,6 +31,29 @@
         <main>
             <!-- SHOP VIEW: Displays available lessons with images, details, and Add to Cart button -->
             <div v-if="!displayCart">
+                <!-- Search and Sort Controls -->
+<div class="controls" style="margin-bottom: 20px;">
+    <input 
+        type="text" 
+        v-model="searchQuery" 
+        placeholder="Search by subject or location..." 
+    />
+
+    <label for="sortBy">Sort by:</label>
+    <select id="sortBy" v-model="sortAttribute">
+        <option value="subject">Subject</option>
+        <option value="location">Location</option>
+        <option value="price">Price</option>
+        <option value="spaces">Spaces</option>
+    </select>
+
+    <label>
+        <input type="radio" value="asc" v-model="sortOrder" /> Ascending
+    </label>
+    <label>
+        <input type="radio" value="desc" v-model="sortOrder" /> Descending
+    </label>
+</div>
                 <h2>Available Lessons</h2>
                 <div v-for="lesson in sortedLessons" :key="lesson._id" class="lesson-card">
                     <figure>
@@ -83,7 +106,8 @@
                         phone: ''
                     },
                     sortAttribute: 'subject',
-                    sortOrder: 'asc'
+                    sortOrder: 'asc',
+                    searchQuery: '',
                 }
             },
             created() {
@@ -103,29 +127,30 @@
                     return this.isValidName && this.isValidPhone && this.cart.length > 0;
                 },
                 sortedLessons() {
-                    var lessonsArray = this.lessons.slice();
-                    var attribute = this.sortAttribute;
-                    var order = this.sortOrder;
+        // 1. Filter by searchQuery (matches subject or location)
+        let filtered = this.lessons;
+        if (this.searchQuery.trim() !== '') {
+            const query = this.searchQuery.toLowerCase();
+            filtered = filtered.filter(lesson =>
+                lesson.subject.toLowerCase().includes(query) ||
+                lesson.location.toLowerCase().includes(query)
+            );
+        }
 
-                    return lessonsArray.sort(function(a, b) {
-                        var aValue = a[attribute];
-                        var bValue = b[attribute];
+        // 2. Sort by sortAttribute and sortOrder
+        return filtered.slice().sort((a, b) => {
+            let aValue = a[this.sortAttribute];
+            let bValue = b[this.sortAttribute];
 
-                        if (typeof aValue === 'string') {
-                            aValue = aValue.toLowerCase();
-                            bValue = bValue.toLowerCase();
-                        }
+            if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+            if (typeof bValue === 'string') bValue = bValue.toLowerCase();
 
-                        if (aValue < bValue) {
-                            return order === 'asc' ? -1 : 1;
-                        }
-                        if (aValue > bValue) {
-                            return order === 'asc' ? 1 : -1;
-                        }
-                        return 0;
-                    });
-                }
-            },
+            if (aValue > bValue) return this.sortOrder === 'asc' ? 1 : -1;
+            if (aValue < bValue) return this.sortOrder === 'asc' ? -1 : 1;
+            return 0;
+        });
+    },
+    },
             methods: {
                 async fetchData() {
                     try {
@@ -179,7 +204,7 @@
                         // 2. Wait for all lessons in the cart to update their spaces via PUT requests
                         await Promise.all(
                             this.cart.map(lesson => {
-                                return fetch(`https://m01035966-adraa.onrender.com/collections/lessons/${lesson._id}`, {
+                                return fetch(`https://m01035966-adraa.onrender.com/collection/lessons/${lesson._id}`, {
                                     method: "PUT",
                                     headers: {
                                         "Content-Type": "application/json"
