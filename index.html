@@ -34,7 +34,7 @@
                 <h2>Available Lessons</h2>
                 <div v-for="lesson in sortedLessons" :key="lesson._id" class="lesson-card">
                     <figure>
-                        <img :src="'http://localhost:3000/images/' + lesson.image" :alt="lesson.subject">
+                        <img :src="'https://m01035966-adraa.onrender.com/images/' + lesson.image" :alt="lesson.subject">
                     </figure>
                     <h2 v-text="lesson.subject"></h2>
                     <p>Location: {{ lesson.location }}</p>
@@ -130,7 +130,7 @@
                 async fetchData() {
                     try {
                         // Fixed route to match singular /collection/lessons in server.js
-                        var response = await fetch("http://localhost:3000/collection/lessons");
+                        var response = await fetch("https://m01035966-adraa.onrender.com/collection/lessons");
                         var serverData = await response.json();
                         if (Array.isArray(serverData)) {
                             this.lessons = serverData;
@@ -167,7 +167,7 @@
 
                     try {
                         // 1. Post the order to the backend
-                        var response = await fetch("http://localhost:3000/collection/orders", {
+                        var response = await fetch("https://m01035966-adraa.onrender.com/collection/orders", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json"
@@ -179,7 +179,7 @@
                         // 2. Wait for all lessons in the cart to update their spaces via PUT requests
                         await Promise.all(
                             this.cart.map(lesson => {
-                                return fetch(`http://localhost:3000/collections/lessons/${lesson._id}`, {
+                                return fetch(`https://m01035966-adraa.onrender.com/collections/lessons/${lesson._id}`, {
                                     method: "PUT",
                                     headers: {
                                         "Content-Type": "application/json"
